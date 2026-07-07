@@ -1,0 +1,29 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres
+  namespace: homelab
+spec:
+  # Single node - replicas are pointless (node dies, they all die).
+  instances: 1
+
+  # imageName omitted: the operator uses its default PostgreSQL image
+  # (current major, 18 as of now). Pin the version explicitly in production.
+
+  # No users/passwords configured: the operator creates the `app` database,
+  # the `app` user, and a generated password in the `postgres-app` Secret.
+  # The postgres superuser is disabled for external access (CNPG default).
+
+  storage:
+    # storageClass omitted: the default is used. In k3s that's local-path —
+    # the PV is a directory on the node's disk.
+    size: 5Gi
+
+  # Limits so Postgres doesn't eat the server (old laptop).
+  # 100m = 0.1 CPU (request, not limit).
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
