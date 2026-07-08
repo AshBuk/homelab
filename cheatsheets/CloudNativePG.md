@@ -37,13 +37,28 @@ kubectl get secret postgres-app -n homelab -o jsonpath='{.data.uri}' | base64 -d
 ## psql inside the pod
 
 ```bash
-kubectl exec -it postgres-1 -n homelab -- psql
+kubectl exec -it postgres-1 -n homelab -- psql                    # superuser
+kubectl exec -it postgres-1 -n homelab -- psql -U postgres -d app # straight into app db
 ```
 
 ```
 \l    -- databases        \du   -- roles
-\c app -- switch database \q    -- quit (commands start with \)
+\c app -- switch database \dt   -- tables in current db
+\q    -- quit (commands start with \)
 ```
+
+## Query jsonb payloads
+
+```sql
+SELECT DISTINCT jsonb_object_keys(payload) FROM github_events;  -- what keys exist
+SELECT jsonb_pretty(payload) FROM github_events LIMIT 1;        -- formatted view
+SELECT payload->>'ref' FROM github_events LIMIT 5;              -- ->> field as text
+SELECT created_at::date AS day, count(*)                        -- ::date truncates,
+FROM github_events GROUP BY day ORDER BY day DESC;              -- groups per day
+```
+
+> `->>` returns NULL for a missing key (no error) — an all-empty column
+> means the key isn't in the data, not that the query is wrong.
 
 ## Operator itself
 

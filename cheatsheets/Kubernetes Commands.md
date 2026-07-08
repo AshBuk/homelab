@@ -54,13 +54,29 @@ kubectl exec -it postgres-1 -n homelab -- psql   # psql inside the DB pod
 > Multi-container pod? kubectl picks the default and says so;
 > use `-c <container>` to choose explicitly.
 
+## CronJobs & Jobs — "scheduled work"
+
+```bash
+kubectl get cronjob -n <ns>          # schedule, last run time
+kubectl get jobs -n <ns>             # history of runs (kept per HistoryLimit)
+kubectl create job --from=cronjob/<name> <test-name> -n <ns>   # trigger now
+kubectl logs job/<name> -n <ns>      # logs of the pod the job created
+```
+
+> Standard way to test a CronJob without waiting for the schedule:
+> `create job --from=` stamps a Job from the CronJob's template.
+> Scheduled runs are named `<cronjob>-<minutes-since-unix-epoch>`.
+
 ## Secrets — "read a generated password"
 
 ```bash
 kubectl get secret <name> -n <ns> -o jsonpath='{.data.password}' | base64 -d; echo
+kubectl create secret generic <name> -n <ns> --from-literal=<key>=<value>
 ```
 
 > Secrets are base64-encoded, not encrypted. `jsonpath` extracts one field.
+> `generic` = plain key-value; manifests reference it via `secretKeyRef`,
+> and `optional: true` there lets the pod start even if the secret is absent.
 
 ## Resource types & shortnames
 
