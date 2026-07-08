@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: dev-activity
+  namespace: homelab
+spec:
+  # Every hour at minute 0. The GitHub events API keeps only the last
+  # 300 events / 90 days, so regular polling builds the long-term record.
+  schedule: "0 * * * *"
+
+  # Never run two collectors at once (irrelevant with hourly runs that
+  # take seconds, but correct by default).
+  concurrencyPolicy: Forbid
+
+  # Keep a few finished pods around so `kubectl logs` has history.
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+
+  jobTemplate:
+    spec:
+      # Retry a failed run twice, then give up until the next schedule.
+      backoffLimit: 2
+      # Kill the job if it somehow runs longer than 5 minutes
+      # (the app also has its own 2-minute internal timeout).
+      activeDeadlineSeconds: 300
+      template:
+        spec:
+          # For one-shot jobs: a failed container means a failed pod,
+          # retries are handled by the Job (backoffLimit), not the kubelet.
+          restartPolicy: Never
+          containers:
+            - name: dev-activity
+              image: ghcr.io/ashbuk/dev-activity:latest
+              # :latest is mutable, so always re-pull. GitOps phase will
+              # replace this with digest/tag pinning.
+              imagePullPolicy: Always
+              env:
+                - name: GITHUB_USER
+                  value: AshBuk
+                # CloudNativePG generates the `postgres-app` Secret; its
+                # `uri` key is a ready-to-use connection string.
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-app
+                      key: uri
+                # Optional: without it the job still works on public
+                # events (60 req/h unauthenticated is plenty for 3 req/h).
+                - name: GITHUB_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: github-token
+                      key: token
+                      optional: true
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
+                limits:
+                  memory: 64Mi
+              # The image is distroless running as nonroot; declare it so
+              # Kubernetes enforces it.
+              securityContext:
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
