@@ -57,6 +57,18 @@ flux tree kustomization apps                 # everything a Kustomization owns
 > `trace` answers "where did this come from" — shows the exact commit and
 > the Kustomization that applied the object. Great for adopted resources.
 
+## Helm releases (helm-controller)
+
+```bash
+flux get helmreleases -A                 # every release: revision, Ready, message
+flux reconcile helmrelease cnpg -n cnpg-system --with-source   # re-sync now
+flux logs --kind HelmRelease --name cnpg # install/upgrade log trail
+```
+
+> Upgrade = bump `version:` in the HelmRelease file, push. Rollback =
+> git revert. The helm CLI is never needed — helm-controller runs the
+> install/upgrade inside the cluster.
+
 ## Suspend / resume
 
 ```bash

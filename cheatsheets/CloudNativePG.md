@@ -62,7 +62,11 @@ FROM github_events GROUP BY day ORDER BY day DESC;              -- groups per da
 
 ## Operator itself
 
+Managed by Flux HelmRelease `cnpg` (`infrastructure/cnpg/release.yaml`).
+Upgrade = bump the chart `version:` there and push — never kubectl apply.
+
 ```bash
 kubectl get pods -n cnpg-system          # controller must be 1/1 Running
-kubectl logs -n cnpg-system deploy/cnpg-controller-manager   # operator logs
+kubectl logs -n cnpg-system deploy/cnpg-cloudnative-pg   # operator logs
+flux get helmrelease cnpg -n cnpg-system # install/upgrade status
 ```
