@@ -69,6 +69,20 @@ flux logs --kind HelmRelease --name cnpg # install/upgrade log trail
 > git revert. The helm CLI is never needed — helm-controller runs the
 > install/upgrade inside the cluster.
 
+## Image automation (auto-deploy new images)
+
+```bash
+flux get images all                      # repository scan → chosen tag → last commit
+flux reconcile image repository dev-activity   # scan ghcr now (after a CI build)
+flux reconcile image update flux-system  # write the bot commit now
+flux suspend image update flux-system    # freeze auto-deploys (e.g. bad release)
+```
+
+> The controller only rewrites lines marked `# {"$imagepolicy": "ns:name"}`
+> under `update.path`. CI must produce sortable tags (`main-<ts>-<sha>`) —
+> raw SHA tags have no order. Rollback: suspend, then git revert the bot
+> commit.
+
 ## Suspend / resume
 
 ```bash
