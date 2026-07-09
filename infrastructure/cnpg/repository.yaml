@@ -1,0 +1,15 @@
+# Copyright (c) 2026 Asher Buk
+# SPDX-License-Identifier: MIT
+
+# Where Helm charts come from — the CNPG project's chart repository.
+# Sources live in flux-system by Flux convention, like the GitRepository.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: cnpg
+  namespace: flux-system
+spec:
+  url: https://cloudnative-pg.github.io/charts
+  # How often to re-fetch the chart index (a new index != an upgrade;
+  # upgrades only happen when `version` below changes in Git).
+  interval: 1h

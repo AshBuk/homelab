@@ -1,0 +1,9 @@
+# Copyright (c) 2026 Asher Buk
+# SPDX-License-Identifier: MIT
+
+# The namespace predates GitOps (created by the manual operator install);
+# declared here so a from-scratch bootstrap recreates it.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cnpg-system
