@@ -33,10 +33,10 @@ spec:
           restartPolicy: Never
           containers:
             - name: dev-activity
-              image: ghcr.io/ashbuk/dev-activity:latest
-              # :latest is mutable, so always re-pull. GitOps phase will
-              # replace this with digest/tag pinning.
-              imagePullPolicy: Always
+              # Pinned to the CI-built commit-SHA tag: immutable, so the
+              # default IfNotPresent pull policy is correct. Deploying a
+              # new version = changing this tag in Git.
+              image: ghcr.io/ashbuk/dev-activity:542a3248146194b5cbbaddd32189900b3729b858
               env:
                 - name: GITHUB_USER
                   value: AshBuk
