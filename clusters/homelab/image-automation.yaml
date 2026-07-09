@@ -1,0 +1,33 @@
+# Copyright (c) 2026 Asher Buk
+# SPDX-License-Identifier: MIT
+
+# Commits new image tags back to this repo (image-automation-controller).
+# Rewrites only lines carrying an "$imagepolicy" marker under ./apps,
+# then pushes to main over the write-enabled deploy key.
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: flux-system
+  namespace: flux-system
+spec:
+  interval: 10m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        name: fluxcdbot
+        email: fluxcdbot@users.noreply.github.com
+      messageTemplate: |
+        apps: auto-update images
+
+        {{ range .Changed.Changes }}{{ print .OldValue }} -> {{ println .NewValue }}{{ end }}
+    push:
+      branch: main
+  update:
+    path: ./apps
+    strategy: Setters

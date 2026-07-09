@@ -1,0 +1,32 @@
+# Copyright (c) 2026 Asher Buk
+# SPDX-License-Identifier: MIT
+
+# Watches ghcr for new dev-activity tags (image-reflector-controller).
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: dev-activity
+  namespace: flux-system
+spec:
+  image: ghcr.io/ashbuk/dev-activity
+  # A scan is one cheap tags-list request; the interval sets deploy
+  # latency after CI, so keep the upstream default.
+  interval: 10m
+---
+# Picks the newest tag: CI tags images main-<unix-ts>-<sha>, the policy
+# extracts the timestamp and orders numerically — raw SHA tags have no
+# order, which is why CI produces this third tag at all.
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: dev-activity
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: dev-activity
+  filterTags:
+    pattern: '^main-(?P<ts>\d+)-[a-f0-9]+$'
+    extract: '$ts'
+  policy:
+    numerical:
+      order: asc
