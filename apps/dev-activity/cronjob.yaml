@@ -10,15 +10,12 @@ spec:
   # Every hour at minute 0. The GitHub events API keeps only the last
   # 300 events / 90 days, so regular polling builds the long-term record.
   schedule: "0 * * * *"
-
   # Never run two collectors at once (irrelevant with hourly runs that
   # take seconds, but correct by default).
   concurrencyPolicy: Forbid
-
   # Keep a few finished pods around so `kubectl logs` has history.
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
-
   jobTemplate:
     spec:
       # Retry a failed run twice, then give up until the next schedule.
@@ -35,7 +32,7 @@ spec:
             - name: dev-activity
               # Pinned to an immutable CI-built tag; the marker comment
               # lets Flux image automation bump it via a Git commit.
-              image: ghcr.io/ashbuk/dev-activity:542a3248146194b5cbbaddd32189900b3729b858 # {"$imagepolicy": "flux-system:dev-activity"}
+              image: ghcr.io/ashbuk/dev-activity:main-1783635222-487338141fd7c6b6b63987ae6db5af68ac0e526c # {"$imagepolicy": "flux-system:dev-activity"}
               env:
                 - name: GITHUB_USER
                   value: AshBuk
