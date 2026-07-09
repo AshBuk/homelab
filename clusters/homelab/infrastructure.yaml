@@ -1,0 +1,18 @@
+# Copyright (c) 2026 Asher Buk
+# SPDX-License-Identifier: MIT
+
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infrastructure
+  namespace: flux-system
+spec:
+  # Drift check only: new commits are applied immediately regardless of
+  # this. Hourly is enough for a single-operator cluster.
+  interval: 1h
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./infrastructure
+  # Delete cluster resources when their files are removed from Git.
+  prune: true
