@@ -1,0 +1,36 @@
+# Copyright (c) 2026 Asher Buk
+# SPDX-License-Identifier: MIT
+
+# Validate every Kubernetes manifest in the repo against its schema.
+# Catches YAML typos and invalid fields before Flux ever sees them.
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  kubeconform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kubeconform
+        run: |
+          curl -sL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz \
+            | tar xz kubeconform
+
+      - name: Validate manifests
+        # Second schema-location teaches kubeconform the CRDs (Flux, CNPG)
+        # from the community CRDs-catalog; -ignore-missing-schemas skips
+        # kinds no schema exists for instead of failing.
+        run: |
+          ./kubeconform -strict -summary \
+            -ignore-missing-schemas \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            apps infrastructure clusters
