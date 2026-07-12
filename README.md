@@ -4,9 +4,9 @@ Bare-metal Kubernetes homelab — k3s cluster on dedicated hardware, running sel
 
 Full cloud-native pipeline:
 
-> Go code → multi-stage Docker build → GitHub Actions CI → GHCR → GitOps delivery via FluxCD → Traefik Ingress routing → Prometheus metrics collection → Grafana observability dashboards
+> Go code → multi-stage Docker build → GitHub Actions CI → GHCR → GitOps delivery via FluxCD → Prometheus metrics collection → Grafana observability dashboards
 
-Infrastructure managed declaratively: all manifests version-controlled in Git, secrets encrypted with SOPS + age, zero manual deployments.
+Infrastructure managed declaratively: all manifests version-controlled in Git, zero manual deployments. Next on the roadmap: Traefik Ingress routing and secrets encrypted with SOPS + age.
 
 ## Repository structure
 
@@ -25,6 +25,10 @@ homelab
 │   │   ├── namespace.yaml         #   cnpg-system namespace
 │   │   ├── repository.yaml        #   HelmRepository: CNPG chart source
 │   │   └── release.yaml           #   HelmRelease: the operator itself
+│   ├── monitoring/                # kube-prometheus-stack (via Helm)
+│   │   ├── namespace.yaml         #   monitoring namespace
+│   │   ├── repository.yaml        #   HelmRepository: prometheus-community
+│   │   └── release.yaml           #   HelmRelease: Prometheus + Grafana + exporters
 │   └── postgres/
 │       └── cluster.yaml           # CNPG Cluster: the PostgreSQL instance
 ├── apps/                          # microservices layer
@@ -48,6 +52,7 @@ flowchart TD
     Root --> IUA[ImageUpdateAutomation]
     Infra -->|dependsOn| Apps
     Infra --> HR[HelmRelease cnpg] --> Operator[CNPG operator]
+    Infra --> HRM[HelmRelease kube-prometheus-stack] --> Mon[Prometheus + Grafana]
     Infra --> PG[Cluster postgres]
     Operator -->|manages| PG
     PG -->|postgres-app Secret| CJ[CronJob dev-activity]
@@ -79,6 +84,9 @@ Flux pulls the repo, applies `clusters/homelab/`, which in turn creates two more
 | `cnpg/namespace.yaml` | Namespace | `cnpg-system`. Declared so a from-scratch bootstrap recreates it (it predates GitOps). |
 | `cnpg/repository.yaml` | HelmRepository | Chart source: the CloudNativePG project's Helm repo, index refreshed hourly. |
 | `cnpg/release.yaml` | HelmRelease | Installs the CNPG operator (chart pinned to `0.29.0`). Upgrades happen by bumping the version in Git. CRDs carry `resource-policy: keep`, so uninstalling never deletes databases. |
+| `monitoring/namespace.yaml` | Namespace | `monitoring` — home of the observability stack. |
+| `monitoring/repository.yaml` | HelmRepository | Chart source: the prometheus-community Helm repo. |
+| `monitoring/release.yaml` | HelmRelease | kube-prometheus-stack (pinned): Prometheus Operator, Prometheus (10Gi PVC), Grafana (2Gi PVC), kube-state-metrics, node-exporter. Values tuned for k3s: control-plane component scraping disabled (single binary, kine instead of etcd); `remediation.retries` so transient failures self-heal. |
 | `postgres/cluster.yaml` | Cluster (CNPG CRD) | The actual PostgreSQL instance: single node, 5Gi local-path storage, memory-limited for old-laptop hardware. The operator generates the `app` database, user, and connection string in the `postgres-app` Secret. |
 
 ### `apps/` — microservices
