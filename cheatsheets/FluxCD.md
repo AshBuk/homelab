@@ -63,11 +63,25 @@ flux tree kustomization apps                 # everything a Kustomization owns
 flux get helmreleases -A                 # every release: revision, Ready, message
 flux reconcile helmrelease cnpg -n cnpg-system --with-source   # re-sync now
 flux logs --kind HelmRelease --name cnpg # install/upgrade log trail
+kubectl describe helmrelease <name> -n <ns>   # Conditions + Helm log tail
 ```
 
 > Upgrade = bump `version:` in the HelmRelease file, push. Rollback =
 > git revert. The helm CLI is never needed — helm-controller runs the
 > install/upgrade inside the cluster.
+
+### Failed release stuck? ("Failed to upgrade after 1 attempt(s)")
+
+```bash
+flux suspend helmrelease <name> -n <ns>  # step 1: clears the failure state
+flux resume helmrelease <name> -n <ns>   # step 2: fresh reconcile from zero
+```
+
+> By default a HelmRelease gets **zero retries**: one failed install/upgrade
+> (e.g. an image pull slower than `timeout`) and helm-controller waits for
+> a human — further reconciles refuse instantly. suspend/resume resets the
+> counter. Prevention: `remediation.retries: 3` under both `install:` and
+> `upgrade:` in the HelmRelease spec (see infrastructure/monitoring/release.yaml).
 
 ## Image automation (auto-deploy new images)
 

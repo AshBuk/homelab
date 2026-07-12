@@ -67,6 +67,17 @@ kubectl logs job/<name> -n <ns>      # logs of the pod the job created
 > `create job --from=` stamps a Job from the CronJob's template.
 > Scheduled runs are named `<cronjob>-<minutes-since-unix-epoch>`.
 
+## Port-forward — "open a cluster Service in the browser"
+
+```bash
+kubectl port-forward -n <ns> svc/<service> 3000:80    # localhost:3000 → service port 80
+kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80  # Grafana
+```
+
+> A tunnel through the API server: no Ingress, no firewall holes — works
+> from any machine with a kubeconfig. Lives while the command runs
+> (Ctrl+C to stop). Left number = local port, right = the Service's port.
+
 ## Secrets — "read a generated password"
 
 ```bash
