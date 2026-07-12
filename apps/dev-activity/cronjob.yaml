@@ -32,7 +32,7 @@ spec:
             - name: dev-activity
               # Pinned to an immutable CI-built tag; the marker comment
               # lets Flux image automation bump it via a Git commit.
-              image: ghcr.io/ashbuk/dev-activity:main-1783635222-487338141fd7c6b6b63987ae6db5af68ac0e526c # {"$imagepolicy": "flux-system:dev-activity"}
+              image: ghcr.io/ashbuk/dev-activity:main-1783859970-1ae02ab89c67189cca5dc04c4628b23a60b6f36c # {"$imagepolicy": "flux-system:dev-activity"}
               env:
                 - name: GITHUB_USER
                   value: AshBuk
