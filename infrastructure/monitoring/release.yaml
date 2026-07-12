@@ -1,0 +1,79 @@
+# Copyright (c) 2026 Asher Buk
+# SPDX-License-Identifier: MIT
+
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  # Release name matches the chart name so generated resource names
+  # (kube-prometheus-stack-grafana, ...) match every tutorial and doc.
+  name: kube-prometheus-stack
+  namespace: monitoring
+spec:
+  interval: 1h
+  # The chart is big (operator + Prometheus + Grafana + exporters);
+  # first install on modest hardware can exceed the default 5m.
+  timeout: 10m
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      # Pinned; bump this line to upgrade (appVersion = operator 0.92.1).
+      version: "87.15.1"
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+        namespace: flux-system
+  install:
+    # Install the bundled CRDs (ServiceMonitor, PodMonitor, Prometheus, ...).
+    crds: Create
+  upgrade:
+    # Helm skips crds/ on upgrade by design; this makes Flux apply new
+    # CRD versions so a chart bump can't silently leave stale CRDs.
+    crds: CreateReplace
+  values:
+    # --- k3s specifics -------------------------------------------------
+    # k3s runs the whole control plane inside one process and uses kine
+    # (SQLite) instead of etcd. These components don't exist as separately
+    # scrapeable targets; leaving them enabled gives permanently-down
+    # targets and constantly firing alerts.
+    kubeEtcd:
+      enabled: false
+    kubeScheduler:
+      enabled: false
+    kubeControllerManager:
+      enabled: false
+    kubeProxy:
+      enabled: false
+
+    # --- Prometheus ----------------------------------------------------
+    prometheus:
+      prometheusSpec:
+        # How long to keep metrics before deletion (default is 10d).
+        retention: 20d
+        # Without this block data lives in an emptyDir volume — wiped on
+        # every pod restart. local-path is the k3s built-in provisioner.
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: local-path
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 10Gi
+        # By default the operator only picks up ServiceMonitors/PodMonitors
+        # labeled as part of this Helm release. `false` = discover them
+        # cluster-wide — needed later for our own apps' monitors.
+        serviceMonitorSelectorNilUsesHelmValues: false
+        podMonitorSelectorNilUsesHelmValues: false
+
+    # --- Grafana -------------------------------------------------------
+    grafana:
+      # Grafana stores hand-made dashboards, users and preferences in an
+      # internal SQLite DB; without a PVC all of it dies with the pod.
+      # (Long-term the GitOps way is dashboards-as-code in ConfigMaps.)
+      persistence:
+        enabled: true
+        storageClassName: local-path
+        size: 2Gi
+      # No adminPassword here on purpose: this repo is public. The chart
+      # default is admin/prom-operator — change it in the UI on first
+      # login; the change persists in the PVC above.

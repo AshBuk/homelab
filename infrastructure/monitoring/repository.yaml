@@ -1,0 +1,15 @@
+# Copyright (c) 2026 Asher Buk
+# SPDX-License-Identifier: MIT
+
+# The prometheus-community chart repository. Sources live in flux-system
+# by Flux convention, same as the cnpg HelmRepository.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: prometheus-community
+  namespace: flux-system
+spec:
+  url: https://prometheus-community.github.io/helm-charts
+  # How often to re-fetch the chart index (a new index != an upgrade;
+  # upgrades only happen when `version` in the HelmRelease changes).
+  interval: 1h
