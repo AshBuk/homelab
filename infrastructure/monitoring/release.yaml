@@ -25,10 +25,17 @@ spec:
   install:
     # Install the bundled CRDs (ServiceMonitor, PodMonitor, Prometheus, ...).
     crds: Create
+    remediation:
+      retries: 3
   upgrade:
     # Helm skips crds/ on upgrade by design; this makes Flux apply new
     # CRD versions so a chart bump can't silently leave stale CRDs.
     crds: CreateReplace
+    # Default is 0 retries: one failed upgrade (e.g. an image pull slower
+    # than `timeout`) leaves the release stuck until a manual
+    # suspend/resume. Let Flux retry transient failures itself.
+    remediation:
+      retries: 3
   values:
     # --- k3s specifics -------------------------------------------------
     # k3s runs the whole control plane inside one process and uses kine
