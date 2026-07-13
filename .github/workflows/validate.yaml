@@ -1,8 +1,10 @@
 # Copyright (c) 2026 Asher Buk
 # SPDX-License-Identifier: MIT
 
-# Validate every Kubernetes manifest in the repo against its schema.
-# Catches YAML typos and invalid fields before Flux ever sees them.
+# Validate infrastructure code on every push/PR:
+#   - kubeconform: every Kubernetes manifest against its schema
+#   - ansible-lint: the host-provisioning playbook (production profile)
+# Catches YAML typos and invalid fields before Flux or Ansible ever see them.
 name: validate
 
 on:
@@ -34,3 +36,14 @@ jobs:
             -schema-location default \
             -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
             apps infrastructure clusters
+
+  ansible-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run ansible-lint
+        uses: ansible/ansible-lint@v26.6.0
+        with:
+          working_directory: ansible
+          requirements_file: requirements.yaml
