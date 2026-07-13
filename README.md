@@ -6,7 +6,7 @@ Full cloud-native pipeline:
 
 > Go code → multi-stage Docker build → GitHub Actions CI → GHCR → GitOps delivery via FluxCD → Prometheus metrics collection → Grafana observability dashboards
 
-Infrastructure managed declaratively: all manifests version-controlled in Git, zero manual deployments. Next on the roadmap: Traefik Ingress routing and secrets encrypted with SOPS + age.
+Infrastructure managed declaratively: all manifests version-controlled in Git, zero manual deployments. The host layer is code too — an Ansible playbook takes a bare Ubuntu install to a hardened k3s node, so the whole lab rebuilds from scratch in two commands (`ansible-playbook`, then `flux bootstrap`).
 
 ## Repository structure
 
@@ -35,6 +35,9 @@ homelab
 │   └── dev-activity/
 │       ├── cronjob.yaml           # hourly GitHub-activity collector
 │       └── image-policy.yaml      # ImageRepository + ImagePolicy for CI tags
+├── ansible/                       # host provisioning: bare Ubuntu → hardened host + k3s
+│   ├── playbook.yaml              #   entry point; roles: ssh, firewall, headless, k3s
+│   └── roles/                     #   SSH hardening, UFW, lid-switch, k3s install
 ├── .github/workflows/
 │   └── validate.yaml              # kubeconform schema check on every push/PR
 ├── cheatsheets/                   # command references (k3s, Flux, CNPG, ...)
@@ -109,4 +112,4 @@ Go microservices; manifests live here, source code in separate repos: [dev-activ
 
 | Manifest | Purpose |
 |---|---|
-| `validate.yaml` | Runs kubeconform on every push/PR: validates all manifests against upstream schemas plus the community CRDs-catalog (Flux, CNPG), so typos are caught before Flux ever sees them. |
+| `validate.yaml` | Two jobs on every push/PR: kubeconform validates all manifests against upstream schemas plus the community CRDs-catalog (Flux, CNPG); ansible-lint checks the provisioning playbook at the production profile. Typos are caught before Flux or Ansible ever see them. |
