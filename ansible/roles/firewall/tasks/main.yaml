@@ -1,0 +1,32 @@
+---
+- name: Install ufw
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+    update_cache: true
+
+# SSH must be allowed before ufw is enabled — headless server.
+- name: Allow SSH
+  community.general.ufw:
+    rule: allow
+    name: OpenSSH
+
+- name: Allow Kubernetes API (kubectl from workstation)
+  community.general.ufw:
+    rule: allow
+    port: "6443"
+    proto: tcp
+
+- name: Allow k3s pod network (Flannel)
+  community.general.ufw:
+    rule: allow
+    from_ip: 10.42.0.0/16
+
+- name: Allow k3s service network
+  community.general.ufw:
+    rule: allow
+    from_ip: 10.43.0.0/16
+
+- name: Enable ufw
+  community.general.ufw:
+    state: enabled

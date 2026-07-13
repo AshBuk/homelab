@@ -1,0 +1,3 @@
+---
+# Public key installed on the server; override if yours lives elsewhere.
+ssh_public_key_file: "~/.ssh/id_rsa.pub"

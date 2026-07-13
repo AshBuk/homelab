@@ -1,0 +1,7 @@
+---
+# Pin a release for reproducible installs; empty string = latest stable.
+k3s_version: ""
+# Extra SANs for the API server certificate, e.g. a future hostname or IP.
+# k3s binds its TLS cert to the install-time IP; add SANs here if the
+# server may move networks.
+k3s_tls_san: []

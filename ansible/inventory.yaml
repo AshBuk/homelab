@@ -1,0 +1,10 @@
+homelab:
+  hosts:
+    hbook:
+      ansible_host: 172.20.10.10 # iPhone-hotspot subnet; changes with the network
+      ansible_user: ashbuk
+  vars:
+    # Ubuntu 25.10+ defaults /usr/bin/sudo to sudo-rs, whose prompt framing
+    # breaks Ansible's become detection — call classic sudo directly.
+    # See journal/2026-07-14-sudo-rs-breaks-ansible-become.md
+    ansible_become_exe: /usr/bin/sudo.ws

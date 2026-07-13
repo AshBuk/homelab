@@ -1,0 +1,17 @@
+---
+- name: Install workstation public key
+  ansible.posix.authorized_key:
+    user: "{{ ansible_user }}"
+    key: "{{ lookup('file', ssh_public_key_file) }}"
+
+# Drop-in wins over sshd_config on Ubuntu (Include *.conf comes first).
+# Password auth is disabled only after the key above is in place, so a
+# first run against a fresh install cannot lock us out.
+- name: Harden sshd (key-only auth, no root login)
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/10-hardening.conf
+    content: |
+      PasswordAuthentication no
+      PermitRootLogin no
+    mode: "0644"
+  notify: Restart ssh

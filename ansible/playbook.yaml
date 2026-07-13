@@ -1,0 +1,12 @@
+---
+# Bare Ubuntu Server → hardened host running k3s, in one run.
+# First run (only password auth exists yet):  ansible-playbook playbook.yaml -k
+# Subsequent runs (key-based):                ansible-playbook playbook.yaml
+- name: Provision homelab host
+  hosts: homelab
+  become: true
+  roles:
+    - ssh
+    - firewall
+    - headless
+    - k3s

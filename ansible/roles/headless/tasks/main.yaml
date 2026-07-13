@@ -1,0 +1,12 @@
+---
+# Laptop-as-server: closing the lid must not suspend the machine.
+- name: Ignore lid switch
+  ansible.builtin.copy:
+    dest: /etc/systemd/logind.conf.d/lid.conf
+    content: |
+      [Login]
+      HandleLidSwitch=ignore
+      HandleLidSwitchExternalPower=ignore
+      HandleLidSwitchDocked=ignore
+    mode: "0644"
+  notify: Restart systemd-logind
