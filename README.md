@@ -38,7 +38,8 @@ homelab
 ├── .github/workflows/
 │   └── validate.yaml              # kubeconform schema check on every push/PR
 ├── cheatsheets/                   # command references (k3s, Flux, CNPG, ...)
-└── journal/                       # dated engineering notes
+├── journal/                       # dated engineering notes
+└── screens/                       # Grafana dashboard screenshots
 ```
 
 ## How it fits together
@@ -63,6 +64,12 @@ flowchart TD
 ```
 
 Flux pulls the repo, applies `clusters/homelab/`, which in turn creates two more Kustomizations: `infrastructure` first (operators, database), then `apps` (workloads that depend on them). CI pushes a new image to GHCR → image automation notices it, rewrites the tag in `apps/` and commits — the same pull loop then deploys it. The cluster never receives a manual `kubectl apply`.
+
+## Monitoring
+
+kube-prometheus-stack (Prometheus + Grafana + exporters)
+
+![Grafana: cluster compute resources](screens/grafana-cluster.png)
 
 ## Manifests
 
